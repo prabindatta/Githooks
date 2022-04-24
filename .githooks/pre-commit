@@ -1,8 +1,6 @@
 #!/bin/sh
 #
-# Created on Sat Apr 23 2022
-#
-# Copyright (c) 2022 Prabin K Datta
+# Created on Mon Apr 18 2022
 #
 # The MIT License (MIT)
 # Copyright (c) 2022 Prabin K Datta
@@ -28,10 +26,10 @@ LC_ALL=C
 # Get local branch name
 local_branch="$(git rev-parse --abbrev-ref HEAD)"
 
-# Valid branch names format
+# Valid development branch names format
 valid_dev_branch_regex="^(feature|bugfix|hotfix)\/(DIG-)[0-9]+(_)([A-Z][a-z0-9]+)((\d)|([A-Z0-9][a-z0-9]+))*([A-Z])?$"
 
-# Format AprSP1
+# Valid sprint branch names format e.g. AprSP1
 valid_sprint_branch_regex="^(sprint)\/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)(SP)([1-3])$"
 
 message="There is something wrong with your branch name. Branch names in this project must adhere to this contract: $valid_dev_branch_regex or $valid_sprint_branch_regex. Your commit will be rejected. You should rename your branch to a valid name and try again."
