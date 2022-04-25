@@ -27,6 +27,9 @@ LC_ALL=C
 local_branch="$(git rev-parse --abbrev-ref HEAD)"
 
 # Valid development branch names format
+# Example 1: feature/Feature123ABCTest
+# valid_dev_branch_regex=^(feature|bugfix|hotfix)\/(DIG-)[0-9]+(_)([A-Z][a-z0-9]+)((\d)|([A-Z0-9][a-z0-9]+)|([A-Z]))*$
+# Example 2: feature/Feature123TestABC
 valid_dev_branch_regex="^(feature|bugfix|hotfix)\/(DIG-)[0-9]+(_)([A-Z][a-z0-9]+)((\d)|([A-Z0-9][a-z0-9]+))*([A-Z])?$"
 
 # Valid sprint branch names format e.g. sprint/AprSP1
