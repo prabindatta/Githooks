@@ -36,7 +36,7 @@ message="There is something wrong with your branch name. Branch names in this pr
 
 if [[ $local_branch =~ $valid_dev_branch_regex || $local_branch =~ $valid_sprint_branch_regex ]]
 then
-    echo "Pre-commit passed for $local_branch (\033[0;31m\xE2\x9C\x94)\033[0m"
+    echo "Pre-commit passed for $local_branch \033[0;31m(\xE2\x9C\x94)\033[0m"
 else
 	echo "$message"
     exit 1
