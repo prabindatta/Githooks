@@ -1,0 +1,87 @@
+#!/bin/sh
+#
+# Created on Mon Apr 18 2022
+#
+# The MIT License (MIT)
+# Copyright (c) 2022 Prabin K Datta
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+# and associated documentation files (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all copies or substantial
+# portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+# TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+
+
+LC_ALL=C
+
+# Get local branch name
+local_branch="$(git rev-parse --abbrev-ref HEAD)"
+
+# Valid development branch names format
+# Example 1: feature/Feature123ABCTest
+# valid_dev_branch_regex=^(feature|bugfix|hotfix)\/(DIG-)[0-9]+(_)([A-Z][a-z0-9]+)((\d)|([A-Z0-9][a-z0-9]+)|([A-Z]))*$
+# Example 2: feature/Feature123TestABC
+valid_dev_branch_regex="^(feature|bugfix|hotfix)\/(DIG-)[0-9]+(_)([A-Z][a-z0-9]+)((\d)|([A-Z0-9][a-z0-9]+))*([A-Z])?$"
+
+# Valid sprint branch names format e.g. sprint/AprSP1
+valid_sprint_branch_regex="^(sprint)\/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)(SP)([1-3])$"
+
+message="There is something wrong with your branch name. Branch names in this project must adhere to this contract: $valid_dev_branch_regex or $valid_sprint_branch_regex. Your commit will be rejected. You should rename your branch to a valid name and try again."
+
+if [[ $local_branch =~ $valid_dev_branch_regex || $local_branch =~ $valid_sprint_branch_regex ]]
+then
+    echo "Pre-commit passed for $local_branch \033[0;31m(\xE2\x9C\x94)\033[0m"
+else
+	echo "$message"
+    exit 1
+fi
+
+if git rev-parse --verify HEAD >/dev/null 2>&1
+then
+	against=HEAD
+else
+	# Initial commit: diff against an empty tree object
+	against=$(git hash-object -t tree /dev/null)
+fi
+
+# If you want to allow non-ASCII filenames set this variable to true.
+allownonascii=$(git config --type=bool hooks.allownonascii)
+
+# Redirect output to stderr.
+exec 1>&2
+
+# Cross platform projects tend to avoid non-ASCII filenames; prevent
+# them from being added to the repository. We exploit the fact that the
+# printable range starts at the space character and ends with tilde.
+if [ "$allownonascii" != "true" ] &&
+	# Note that the use of brackets around a tr range is ok here, (it's
+	# even required, for portability to Solaris 10's /usr/bin/tr), since
+	# the square bracket bytes happen to fall in the designated range.
+	test $(git diff --cached --name-only --diff-filter=A -z $against |
+	  LC_ALL=C tr -d '[ -~]\0' | wc -c) != 0
+then
+	cat <<\EOF
+Error: Attempt to add a non-ASCII file name.
+
+This can cause problems if you want to work with people on other platforms.
+
+To be portable it is advisable to rename the file.
+
+If you know what you are doing you can disable this check using:
+
+  git config hooks.allownonascii true
+EOF
+	exit 1
+fi
+
+# If there are whitespace errors, print the offending file names and fail.
+exec git diff-index --check --cached $against --
